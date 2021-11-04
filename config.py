@@ -18,7 +18,9 @@ class DiffGeneExpState(State):
     data = SelectionCallbackProperty()
     subset1 = SelectionCallbackProperty()
     subset2 = SelectionCallbackProperty()
-    att = SelectionCallbackProperty()
+    exp_att = SelectionCallbackProperty()
+    gene_att = SelectionCallbackProperty()
+
 
     def __init__(self, data_collection):
 
@@ -26,7 +28,8 @@ class DiffGeneExpState(State):
 
         self.data_collection = data_collection
         self.data_helper = DataCollectionComboHelper(self, 'data', data_collection)
-        self.att_helper = ComponentIDComboHelper(self, 'att')
+        self.exp_att_helper = ComponentIDComboHelper(self, 'exp_att', numeric=True)
+        self.gene_att_helper = ComponentIDComboHelper(self, 'gene_att', categorical=True, numeric=True)
 
         self.subset1_helper = ComboHelper(self, 'subset1')
         self.subset2_helper = ComboHelper(self,'subset2')
@@ -40,14 +43,18 @@ class DiffGeneExpState(State):
         self.subset1_helper.choices = data_collection.subset_groups
         self.subset2_helper.choices = data_collection.subset_groups
         
-        self.subset1_helper.selection = data_collection.subset_groups[0]
-        self.subset2_helper.selection = data_collection.subset_groups[1]
+        try:
+            self.subset1_helper.selection = data_collection.subset_groups[0]
+            self.subset2_helper.selection = data_collection.subset_groups[1]
+        except IndexError:
+            pass
 
         self.subset1_helper.display = display_func_label
         self.subset2_helper.display = display_func_label
 
     def _on_data_change(self, *args, **kwargs):
-        self.att_helper.set_multiple_data([] if self.data is None else [self.data])
+        self.exp_att_helper.set_multiple_data([] if self.data is None else [self.data])
+        self.gene_att_helper.set_multiple_data([] if self.data is None else [self.data])
 
 
 class DiffGeneExpDialog(QtWidgets.QDialog):
@@ -80,17 +87,17 @@ class DiffGeneExpDialog(QtWidgets.QDialog):
         for subset2 in self.state.subset2.subsets:
             if subset2.data == self.state.data:
                 continue
-        gene_list = np.unique(self.state.data['gene'])
+        gene_list = np.unique(self.state.data[self.state.gene_att])
         
         mask1 = subset1.to_mask()
         mask2 = subset2.to_mask()
         len1 = np.sum(subset1.to_mask())
         len2 = np.sum(subset2.to_mask())
-        geneset1 = self.state.data['gene'][mask1]
-        geneset2 = self.state.data['gene'][mask2]
+        geneset1 = self.state.data[self.state.gene_att][mask1]
+        geneset2 = self.state.data[self.state.gene_att][mask2]
 
-        gene_expression_set1 = self.state.data[self.state.att][mask1]
-        gene_expression_set2 = self.state.data[self.state.att][mask2]
+        gene_expression_set1 = self.state.data[self.state.exp_att][mask1]
+        gene_expression_set2 = self.state.data[self.state.exp_att][mask2]
         
         differential_genes = []
         state_list = []
@@ -102,7 +109,7 @@ class DiffGeneExpDialog(QtWidgets.QDialog):
             
             if (g1/g2 < 0.5) or (g1/g2 > 2):
                 differential_genes.append(gene)
-                state_list.append(self.state.data.id['gene'] == gene)
+                state_list.append(self.state.data.id[self.state.gene_att] == gene)
         print(differential_genes)
         final_state = MultiOrState(state_list)
         self.state.data_collection.new_subset_group('Diff Gene', final_state)
