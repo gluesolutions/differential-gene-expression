@@ -16,8 +16,8 @@ __all__ = ['DiffGeneExpDialog']
 class DiffGeneExpState(State):
 
     data = SelectionCallbackProperty()
-    s1_att = SelectionCallbackProperty()
-    s2_att = SelectionCallbackProperty()
+    subset1 = SelectionCallbackProperty()
+    subset2 = SelectionCallbackProperty()
     att = SelectionCallbackProperty()
 
     def __init__(self, data_collection):
@@ -28,8 +28,8 @@ class DiffGeneExpState(State):
         self.data_helper = DataCollectionComboHelper(self, 'data', data_collection)
         self.att_helper = ComponentIDComboHelper(self, 'att')
 
-        self.subset1_helper = ComboHelper(self, 's1_att')
-        self.subset2_helper = ComboHelper(self,'s2_att')
+        self.subset1_helper = ComboHelper(self, 'subset1')
+        self.subset2_helper = ComboHelper(self,'subset2')
 
         def display_func_label(subset_group):
             return subset_group.label
@@ -40,6 +40,9 @@ class DiffGeneExpState(State):
         self.subset1_helper.choices = data_collection.subset_groups
         self.subset2_helper.choices = data_collection.subset_groups
         
+        self.subset1_helper.selection = data_collection.subset_groups[0]
+        self.subset2_helper.selection = data_collection.subset_groups[1]
+
         self.subset1_helper.display = display_func_label
         self.subset2_helper.display = display_func_label
 
@@ -71,10 +74,10 @@ class DiffGeneExpDialog(QtWidgets.QDialog):
         """
         Actually make the subset from the differential gene expression calculation
         """
-        for subset1 in self.state.s1_att.subsets:
+        for subset1 in self.state.subset1.subsets:
             if subset1.data == self.state.data:
                 continue
-        for subset2 in self.state.s2_att.subsets:
+        for subset2 in self.state.subset2.subsets:
             if subset2.data == self.state.data:
                 continue
         gene_list = np.unique(self.state.data['gene'])

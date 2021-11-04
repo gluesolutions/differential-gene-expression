@@ -58,7 +58,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="combosel_s2_att">
+      <widget class="QComboBox" name="combosel_subset2">
        <property name="sizeAdjustPolicy">
         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
        </property>
@@ -101,7 +101,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="combosel_s1_att">
+      <widget class="QComboBox" name="combosel_subset1">
        <property name="sizeAdjustPolicy">
         <enum>QComboBox::AdjustToMinimumContentsLength</enum>
        </property>
