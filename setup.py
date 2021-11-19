@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 entry_points = """
 [glue.plugins]
-differntial-gene-expression=differential-gene-expression:setup
+differential_gene_expression=differential_gene_expression:setup
 """
 
 #with open('README.rst') as infile:
@@ -15,8 +15,8 @@ differntial-gene-expression=differential-gene-expression:setup
 #with open('myplugin/version.py') as infile:
 #    exec(infile.read())
 
-setup(name='differntial-gene-expression',
-      version=__version__,
+setup(name='differntial_gene_expression',
+      version="0.1",
       description='Menubar plugin for differential gene expression',
       long_description="",
       url="",
