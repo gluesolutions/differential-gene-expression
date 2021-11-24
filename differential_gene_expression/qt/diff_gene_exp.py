@@ -38,12 +38,12 @@ class DiffGeneExpDialog(QtWidgets.QDialog):
         differentially expressed. Currently this calculation is just
         genes that show 2x expression in one or other subset.
         """
-        for subset1 in self.state.subset1.subsets:
-            if subset1.data == self.state.data:
-                continue
-        for subset2 in self.state.subset2.subsets:
-            if subset2.data == self.state.data:
-                continue
+        for subset in self.state.subset1.subsets:
+            if subset.data == self.state.data:
+                subset1 = subset
+        for subset in self.state.subset2.subsets:
+            if subset.data == self.state.data:
+                subset2 = subset
         gene_list = np.unique(self.state.data[self.state.gene_att])
 
         mask1 = subset1.to_mask()
