@@ -1,64 +1,18 @@
 import os
 import numpy as np
-
-from glue.config import menubar_plugin
-from glue.core.subset import combine_multiple, MultiOrState
 from qtpy import QtWidgets
-from glue.core.state_objects import State
-from echo import CallbackProperty, SelectionCallbackProperty
-from glue.utils.qt import load_ui
-from glue.core.data_combo_helper import DataCollectionComboHelper, ComponentIDComboHelper, ComboHelper
 from echo.qt import autoconnect_callbacks_to_qt
+
+from glue.core.subset import MultiOrState
+from glue.utils.qt import load_ui
+
+from ..state import DiffGeneExpState
 
 __all__ = ['DiffGeneExpDialog']
 
 
-class DiffGeneExpState(State):
-
-    data = SelectionCallbackProperty()
-    subset1 = SelectionCallbackProperty()
-    subset2 = SelectionCallbackProperty()
-    exp_att = SelectionCallbackProperty()
-    gene_att = SelectionCallbackProperty()
-
-
-    def __init__(self, data_collection):
-
-        super(DiffGeneExpState, self).__init__()
-
-        self.data_collection = data_collection
-        self.data_helper = DataCollectionComboHelper(self, 'data', data_collection)
-        self.exp_att_helper = ComponentIDComboHelper(self, 'exp_att', numeric=True)
-        self.gene_att_helper = ComponentIDComboHelper(self, 'gene_att', categorical=True, numeric=True)
-
-        self.subset1_helper = ComboHelper(self, 'subset1')
-        self.subset2_helper = ComboHelper(self,'subset2')
-
-        def display_func_label(subset_group):
-            return subset_group.label
-
-        self.add_callback('data', self._on_data_change)
-        self._on_data_change()
-
-        self.subset1_helper.choices = data_collection.subset_groups
-        self.subset2_helper.choices = data_collection.subset_groups
-        
-        try:
-            self.subset1_helper.selection = data_collection.subset_groups[0]
-            self.subset2_helper.selection = data_collection.subset_groups[1]
-        except IndexError:
-            pass
-
-        self.subset1_helper.display = display_func_label
-        self.subset2_helper.display = display_func_label
-
-    def _on_data_change(self, *args, **kwargs):
-        self.exp_att_helper.set_multiple_data([] if self.data is None else [self.data])
-        self.gene_att_helper.set_multiple_data([] if self.data is None else [self.data])
-
-
 class DiffGeneExpDialog(QtWidgets.QDialog):
-    
+
     def __init__(self, collect, default=None, parent=None):
 
         super(DiffGeneExpDialog, self).__init__(parent=parent)
@@ -91,7 +45,7 @@ class DiffGeneExpDialog(QtWidgets.QDialog):
             if subset2.data == self.state.data:
                 continue
         gene_list = np.unique(self.state.data[self.state.gene_att])
-        
+
         mask1 = subset1.to_mask()
         mask2 = subset2.to_mask()
         len1 = np.sum(subset1.to_mask())
@@ -101,15 +55,15 @@ class DiffGeneExpDialog(QtWidgets.QDialog):
 
         gene_expression_set1 = self.state.data[self.state.exp_att][mask1]
         gene_expression_set2 = self.state.data[self.state.exp_att][mask2]
-        
+
         differential_genes = []
         state_list = []
         for gene in gene_list:
-            # Sum over gene expression values, divide by length of subset to get
-            # the average value for this SPARSE array (missing = 0)
+            # Sum over gene expression values, divide by length of subset to
+            # get the average value for this SPARSE array (missing = 0)
             g1 = np.sum(gene_expression_set1[geneset1 == gene])/len1
             g2 = np.sum(gene_expression_set2[geneset2 == gene])/len2
-            
+
             if (g1/g2 < 0.5) or (g1/g2 > 2):
                 differential_genes.append(gene)
                 state_list.append(self.state.data.id[self.state.gene_att] == gene)
@@ -124,11 +78,3 @@ class DiffGeneExpDialog(QtWidgets.QDialog):
 
         if value == QtWidgets.QDialog.Accepted:
             self._apply()
-
-
-
-@menubar_plugin("Differential Gene Expression")
-def diff_gene_exp_plugin(session, data_collection):
-    DiffGeneExpDialog.create_subset(data_collection,
-        default=None, parent=None)
-    return
